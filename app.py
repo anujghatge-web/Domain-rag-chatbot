@@ -56,7 +56,7 @@ def main() -> None:
         "Upload PDF or TXT documents, process them, and ask questions "
         "using Retrieval-Augmented Generation, powered by Gemini."
     )
-    
+  
 
     with st.expander("How this RAG application works"):
         st.markdown(
@@ -72,10 +72,23 @@ def main() -> None:
 
     with st.sidebar:
         st.header("Configuration")
+
         model_name = st.selectbox("Gemini model", GEMINI_MODELS)
-        api_key = os.getenv("GEMINI_API_KEY", "")
+        # Streamlit Cloud stores secrets in st.secrets; locally there's no
+        # secrets.toml file at all, which makes st.secrets.get() raise
+        # instead of returning None -- so this must be wrapped in
+        # try/except rather than relied on directly.
+        try:
+            api_key = st.secrets.get("GEMINI_API_KEY", "")
+        except Exception:
+            api_key = ""
+        api_key = api_key or os.getenv("GEMINI_API_KEY", "")
+
         if not api_key:
-            st.error("GEMINI_API_KEY is not set. Add it to your .env file.")
+            st.error(
+                "GEMINI_API_KEY is not set. Add it to your .env file "
+                "locally, or to this app's Secrets in Streamlit Cloud."
+            )
 
         top_k = st.slider("Chunks to retrieve", 1, 8, 4)
         chunk_size = st.slider("Chunk size", 300, 1500, 700, 100)
